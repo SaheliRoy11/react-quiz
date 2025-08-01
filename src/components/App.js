@@ -5,6 +5,7 @@ import Loader from "./Loader";
 import Error from "./Error";
 import StartScreen from "./StartScreen";
 import Question from "./Question";
+import NextButton from "./NextButton";
 
 const initialState = {
   questions: [],
@@ -27,20 +28,24 @@ function reducer(state, action) {
       return { ...state, status: "active" };
 
     case "newAnswer":
-      const question = state.questions[state.index];//current question
+      const question = state.questions[state.index]; //current question
 
       return {
         //notice that here we are not updating the status because our app is still in 'active' status as the quiz is running.The newAnswer case is to update the state,thus to re-render the component and reflect the necessary changes to show whether the chosen answer by the user is correct or not, and depending on that there are certain changes on points, color of options and next button.
         ...state,
 
-        answer: action.payload,//store the index of chosen option.
+        answer: action.payload, //store the index of chosen option.
 
-        points://update the points when a question has been answered, hence doing it inside this case itself
-        //check if the answered option's index is same as the correctOption of the question, if so it means the answer is correct then update points by adding the points of the question, otherwise keep it the same as it means the answer was wrong
+        //update the points when a question has been answered, hence doing it inside this case itself
+        points:
+          //check if the answered option's index is same as the correctOption of the question, if so it means the answer is correct then update points by adding the points of the question, otherwise keep it the same as it means the answer was wrong
           action.payload === question.correctOption
             ? state.points + question.points
-            : state.points
+            : state.points,
       };
+
+    case "nextQuestion":
+      return { ...state, index: state.index + 1, answer: null };
     default:
       throw new Error("Unknown action");
   }
@@ -70,11 +75,15 @@ export default function App() {
           <StartScreen numQuestions={numQuestions} dispatch={dispatch} />
         )}
         {status === "active" && (
-          <Question
-            question={questions[index]}
-            dispatch={dispatch}
-            answer={answer} //prop drilling, the Options component will need this to reflect color of options, depending on the correct and wrong answer
-          />
+          <>
+            <Question
+              question={questions[index]}
+              dispatch={dispatch}
+              answer={answer} //prop drilling, the Options component will need this to reflect color of options, depending on the correct and wrong answer
+            />
+
+            <NextButton dispatch={dispatch} answer={answer} />
+          </>
         )}
       </Main>
     </div>
