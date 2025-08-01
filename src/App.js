@@ -10,6 +10,7 @@ const initialState = {
   questions: [],
   //to tell the user the status of our app at the moment, in the beginning the app will be in the loading state. The app can be in any of the following statuses, those are 'loading', 'error', 'ready' (once data has arrived), 'active' (quiz is running), 'finished' (quiz completed).
   status: "loading",
+  index: 0 //keeps track of currently displayed question
 };
 
 function reducer(state, action) {
@@ -27,7 +28,7 @@ function reducer(state, action) {
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { questions, status } = state;
+  const { questions, status, index } = state;
   const numQuestions = questions.length;
 
   //fetch data from API
@@ -48,7 +49,7 @@ export default function App() {
         {status === "ready" && (
           <StartScreen numQuestions={numQuestions} dispatch={dispatch} />
         )}
-        {status === "active" && <Question />}
+        {status === "active" && <Question question = {questions[index]}/>}
       </Main>
     </div>
   );
