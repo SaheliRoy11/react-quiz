@@ -10,17 +10,37 @@ const initialState = {
   questions: [],
   //to tell the user the status of our app at the moment, in the beginning the app will be in the loading state. The app can be in any of the following statuses, those are 'loading', 'error', 'ready' (once data has arrived), 'active' (quiz is running), 'finished' (quiz completed).
   status: "loading",
-  index: 0 //keeps track of currently displayed question
+  index: 0, //keeps track of currently displayed question
+  answer: null, //stores the answer selected by the user, initially no answer is selected so the value is null, then when the user selects the option for answering the question, the state is updated.It stores the index of the answer in options.
+  points: 0, //store total points user scored while playing the quiz
 };
 
 function reducer(state, action) {
   switch (action.type) {
     case "dataReceived":
       return { ...state, questions: action.payload, status: "ready" };
+
     case "dataFailed":
       return { ...state, status: "error" };
+
     case "start":
       return { ...state, status: "active" };
+
+    case "newAnswer":
+      const question = state.questions[state.index];//current question
+
+      return {
+        //notice that here we are not updating the status because our app is still in 'active' status as the quiz is running.The newAnswer case is to update the state,thus to re-render the component and reflect the necessary changes to show whether the chosen answer by the user is correct or not, and depending on that there are certain changes on points, color of options and next button.
+        ...state,
+
+        answer: action.payload,//store the index of chosen option.
+
+        points://update the points when a question has been answered, hence doing it inside this case itself
+        //check if the answered option's index is same as the correctOption of the question, if so it means the answer is correct then update points by adding the points of the question, otherwise keep it the same as it means the answer was wrong
+          action.payload === question.correctOption
+            ? state.points + question.points
+            : state.points
+      };
     default:
       throw new Error("Unknown action");
   }
@@ -28,7 +48,7 @@ function reducer(state, action) {
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { questions, status, index } = state;
+  const { questions, status, index, answer } = state;
   const numQuestions = questions.length;
 
   //fetch data from API
@@ -49,7 +69,13 @@ export default function App() {
         {status === "ready" && (
           <StartScreen numQuestions={numQuestions} dispatch={dispatch} />
         )}
-        {status === "active" && <Question question = {questions[index]}/>}
+        {status === "active" && (
+          <Question
+            question={questions[index]}
+            dispatch={dispatch}
+            answer={answer} //prop drilling, the Options component will need this to reflect color of options, depending on the correct and wrong answer
+          />
+        )}
       </Main>
     </div>
   );
