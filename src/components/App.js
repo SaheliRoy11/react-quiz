@@ -7,6 +7,7 @@ import StartScreen from "./StartScreen";
 import Question from "./Question";
 import NextButton from "./NextButton";
 import Progress from "./Progress";
+import FinishScreen from "./FinishScreen";
 
 const initialState = {
   questions: [],
@@ -15,6 +16,7 @@ const initialState = {
   index: 0, //keeps track of currently displayed question
   answer: null, //stores the answer selected by the user, initially no answer is selected so the value is null, then when the user selects the option for answering the question, the state is updated.It stores the index of the answer in options.
   points: 0, //store total points user scored while playing the quiz
+  highscore: 0 //store highest score of the user
 };
 
 function reducer(state, action) {
@@ -47,6 +49,12 @@ function reducer(state, action) {
 
     case "nextQuestion":
       return { ...state, index: state.index + 1, answer: null };
+
+    case "finish":
+      return {...state, status: "finished", 
+        highscore: state.points > state.highscore ? state.points : state.highscore
+      };
+
     default:
       throw new Error("Unknown action");
   }
@@ -54,7 +62,7 @@ function reducer(state, action) {
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { questions, status, index, answer, points } = state;
+  const { questions, status, index, answer, points, highscore } = state;
   const numQuestions = questions.length;
   const maxPossiblePoints = questions.reduce(
     (prev, cur) => prev + cur.points,
@@ -95,9 +103,12 @@ export default function App() {
               answer={answer} //prop drilling, the Options component will need this to reflect color of options, depending on the correct and wrong answer
             />
 
-            <NextButton dispatch={dispatch} answer={answer} />
+            <NextButton dispatch={dispatch} answer={answer} index={index} numQuestions={numQuestions}/>
           </>
         )}
+        {
+          status === "finished" && <FinishScreen points={points} maxPossiblePoints={maxPossiblePoints} highscore={highscore} />
+        }
       </Main>
     </div>
   );
